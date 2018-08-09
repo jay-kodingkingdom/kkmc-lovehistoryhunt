@@ -1,5 +1,6 @@
 package com.kodingkingdom.hunt;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.UUID;
 
@@ -13,8 +14,8 @@ import org.bukkit.block.Chest;
 import org.bukkit.entity.Player;
 import org.bukkit.material.Directional;
 
-import com.kodingkingdom.makehistory.Hunt;
 import com.kodingkingdom.makehistory.HuntPlugin;
+import com.kodingkingdom.commandline.kinds.SilentCommandLine;
 
 //TODO: make problem data immutable wrt problem
 public class Problem implements Runnable{
@@ -43,20 +44,20 @@ public class Problem implements Runnable{
 
 	
 
-	public static void live (Chest chest) {
+	public static Problem live (Chest chest) {
 		try {
 			Problem problem = new Problem (chest);
-			Hunt .problems .add (problem);
 			problem .plate_location() .getBlock() .setType (Material.GOLD_PLATE);
 			problem .run ();
+			return problem;
 		}
 		catch (Throwable t) {
-			t .printStackTrace();;
+			t .printStackTrace();
+			return null;
 		}
 	}
 	public void die () {
 		this .plate_location() .getBlock() .setType (Material.AIR);
-		Hunt .problems .remove (this);
 		this .attempts = null;
 	}
 	
@@ -65,9 +66,13 @@ public class Problem implements Runnable{
 		int plate_x = this .plate_location() .getBlockX();
 		int plate_y = this .plate_location() .getBlockY();
 		int plate_z = this .plate_location() .getBlockZ();
-
-		Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(), "particle portal " + plate_x + " " + plate_y + " " + plate_z + " 0.3 0.3 0.6 0.15 3");
-		Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(), "particle fireworksSpark " + plate_x + " " + plate_y + " " + plate_z + " 0.3 0.3 0.6 0.15 3");
+		
+		if (Bukkit.getOnlinePlayers().size() > 0) {
+			Player pawn = Bukkit.getOnlinePlayers().iterator().next();
+			SilentCommandLine.eval(pawn, Arrays.asList (
+					"particle portal " + plate_x + " " + plate_y + " " + plate_z + " 0.3 0.3 0.6 0.15 3",
+					"particle fireworksSpark " + plate_x + " " + plate_y + " " + plate_z + " 0.3 0.3 0.6 0.15 3"));
+		}
 
 		if (this .attempts != null)
 			HuntPlugin.getPlugin().scheduleTask(this, 2);	
@@ -86,7 +91,7 @@ public class Problem implements Runnable{
 	
 	
 	public void test (Player p) {
-		Room venue = Hunt .free_room ();
+		Room venue = HuntPlugin.getPlugin().getHunt() .free_room ();
 		venue .test (this, p);
 		p .teleport (venue .reference);
 	}

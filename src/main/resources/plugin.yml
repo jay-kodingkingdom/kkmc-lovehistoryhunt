@@ -1,3 +1,4 @@
 name: MakeHistoryHunt
 main: com.kodingkingdom.makehistory.HuntPlugin
 version: 0.0.1
+depend: [CommandLines]
